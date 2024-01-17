@@ -38,7 +38,7 @@ TEST_OUTPUTS_PATH = '../dataset_reduced_filled/test_outputs/'
 n_classes = 2
 img_size = 256
 
-def render_muscles(img, mask, shp=None):
+def render_predictions(img, mask, shp=None):
     palette = sns.color_palette("bright", n_classes)
     cmap = sns.color_palette(palette, as_cmap=True)
     if shp != None:
@@ -106,7 +106,7 @@ if __name__ == "__main__":
         shape_original = image_original.shape
         image_original = cv2.resize(image_original, (shape_original[1], shape_original[0]))
         mask_original = cv2.imread(TEST_MASK_PATH + image_name + '.png', cv2.IMREAD_GRAYSCALE)
-        painted_original = render_muscles(image_original, mask_original)
-        painted_image = render_muscles(image_original, pred_mask_clean, shape_original)
+        painted_original = render_predictions(image_original, mask_original)
+        painted_image = render_predictions(image_original, pred_mask_clean, shape_original)
         cv2.imwrite('{}{}_pred.png'.format(TEST_OUTPUTS_PATH, image_name), painted_image)
         cv2.imwrite('{}{}_gt.png'.format(TEST_OUTPUTS_PATH, image_name), painted_original)

@@ -217,6 +217,31 @@ class ImageTestDataset(Dataset):
     def get_image_name(self, idx):
         return self.X[idx] + '.png'
 
+class ImagePredictDataset(Dataset):
+    def __init__(self, img_path, X, transform=None):
+        self.img_path = img_path
+        self.X = X
+        self.transform = transform
+      
+    def __len__(self):
+        return len(self.X)
+    
+    def __getitem__(self, idx):
+        img = cv2.imread(self.img_path + self.X[idx] + '.png')
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        
+        if self.transform is not None:
+            aug = self.transform(image=img)
+            img = Image.fromarray(aug['image'])
+        
+        if self.transform is None:
+            img = Image.fromarray(img)
+        
+        return img
+
+    def get_image_name(self, idx):
+        return self.X[idx] + '.png'
+
 def predict_image_mask_miou(model, image, mask, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
     model.eval()
     t = T.Compose([T.ToTensor(), T.Normalize(mean, std)])
@@ -234,6 +259,18 @@ def predict_image_mask_miou(model, image, mask, mean=[0.485, 0.456, 0.406], std=
         masked = masked.cpu().squeeze(0)
     return masked, score
 
+def predict_image(model, image, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
+    model.eval()
+    t = T.Compose([T.ToTensor(), T.Normalize(mean, std)])
+    image = t(image)
+    model.to(device); image=image.to(device)
+    with torch.no_grad():
+        image = image.unsqueeze(0)
+        output = model(image)
+        masked = torch.argmax(output, dim=1)
+        masked = masked.cpu().squeeze(0)
+    return masked
+
 def predict_image_mask_pixel(model, image, mask, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
     model.eval()
     t = T.Compose([T.ToTensor(), T.Normalize(mean, std)])
@@ -250,3 +287,5 @@ def predict_image_mask_pixel(model, image, mask, mean=[0.485, 0.456, 0.406], std
         masked = torch.argmax(output, dim=1)
         masked = masked.cpu().squeeze(0)
     return masked, acc
+
+
